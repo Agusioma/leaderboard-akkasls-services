@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package sniper.game.api;
+
+option java_outer_classname = "SniperGameApi";
+
+import "akkaserverless/annotations.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+service LeaderboardDemo {
+  option (akkaserverless.codegen) = {
+    event_sourced_entity: {
+      name: "sniper.game.api.GamingLeaderboardEntity"
+      entity_type: "leaderboard_entity"
+      state: "sniper.game.domain.LeaderBoardState"
+      events: [
+        "sniper.game.domain.PlayerAdded",
+        "sniper.game.domain.PlayerScored"]
+    }
+  };
+
+  rpc CreateAppointment(AddPlayer) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/player/{leaderboard_id}/add"
+      body: "*"
+    };
+  }
+
+  rpc UpdateScore(UpdatePlayerScore) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/score/{player_score}/for/{player_id}/in/{leaderboard_id}/update"
+      body: "*"
+    };
+  }
+
+  rpc FetchScores(GetScores) returns (LeaderBoard) {
+    option (google.api.http) = {
+      get: "/{leaderboard_id}/list"
+    };
+  }
+}
+message LeaderBoard {
+  repeated PlayerDetails score = 1;
+}
+
+message PlayerDetails {
+  string player_id = 1;
+  string player_name = 2;
+  string player_score = 3;
+}
+
+message AddPlayer {
+  string leaderboard_id = 1 [(akkaserverless.field).entity_key = true];
+  string player_id = 2;
+  string player_name = 3;
+  string player_score = 4;
+}
+
+message UpdatePlayerScore {
+  string leaderboard_id = 1 [(akkaserverless.field).entity_key = true];
+  string player_id = 2;
+  string player_score = 3;
+}
+
+message GetScores{
+  string leaderboard_id = 1 [(akkaserverless.field).entity_key = true];
+}
